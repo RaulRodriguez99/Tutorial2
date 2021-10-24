@@ -2,21 +2,61 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class PlayerScript : MonoBehaviour
 {
-
      private Rigidbody2D rd2d;
+     private int count;
+     private SpriteRenderer mySpriteRenderer;
+     public GameObject winTextObject;
+      public GameObject loseTextObject;
      public float speed;
-     public Text score;
-     private int scoreValue = 0;
-
+     public TextMeshProUGUI CountText;
+     public TextMeshProUGUI LivesText;
+     public int Lives;
+     public AudioSource musicSource;
+     public AudioClip winSound;
+     Animator anim; 
+     
 
     // Start is called before the first frame update
     void Start()
     {
-        rd2d = GetComponent<Rigidbody2D>();
-        score.text = scoreValue.ToString();
+      count = 0;
+
+       rd2d = GetComponent<Rigidbody2D>();
+
+        SetCountText();
+        winTextObject.SetActive(false); 
+
+        loseTextObject.SetActive(false);
+
+      Lives = 3;
+      
+    
+      anim = GetComponent<Animator>();
+    
+       mySpriteRenderer = GetComponent<SpriteRenderer>();
+
+    }
+
+    void SetCountText()
+    {
+        CountText.text = "Count: " + count.ToString();
+        if(count >=8)
+        {
+          winTextObject.SetActive(true);
+          musicSource.clip = winSound;
+          musicSource.Play();
+          musicSource.loop = false;
+        }
+        if(Lives<=0)
+        {
+           loseTextObject.SetActive(true);
+           Destroy(gameObject);
+        }
+         LivesText.text = "Lives: " + Lives.ToString();
     }
 
     // Update is called once per frame
@@ -27,22 +67,75 @@ public class PlayerScript : MonoBehaviour
 
         rd2d.AddForce(new Vector2(hozMovement * speed, vertMovement * speed)); 
 
-         if (Input.GetKeyDown(KeyCode.Escape))
-        {
-          Application.Quit();
-        }
-   
+      
     }
 
+     void Update()
+     {
+
+      if (Input.GetKeyDown(KeyCode.A))
+        {    
+          anim.SetInteger("State", 1);
+
+           mySpriteRenderer.flipX = true;
+        
+          }
+
+     if (Input.GetKeyUp(KeyCode.A))
+        {
+          anim.SetInteger("State", 0);
+         }
+     
+     if (Input.GetKeyDown(KeyCode.D))
+        {    
+          anim.SetInteger("State", 1);
+
+          mySpriteRenderer.flipX = false;
+          }
+
+     if (Input.GetKeyUp(KeyCode.D))
+        {
+          anim.SetInteger("State", 0);
+         }
+
+     if (Input.GetKeyDown(KeyCode.W))
+        {
+           anim.SetInteger("State", 2);
+
+         }
+
+     if (Input.GetKeyUp(KeyCode.W))
+        {
+          anim.SetInteger("State", 0);
+        }
+
+       
+            
+    }
+     
       private void OnCollisionEnter2D(Collision2D collision)
     {
       if (collision.collider.tag == "Coin")
       {
-         scoreValue += 1;
-         score.text = scoreValue.ToString();
+         count += 1;
+         SetCountText();
+
          Destroy(collision.collider.gameObject);
+
+         if(count == 4)
+         {
+           transform.position = new Vector3(62.0f, 1.0f, 0.0f);
+         }
       }
 
+         else if (collision.gameObject.CompareTag("Enemy"))
+     {
+          collision.gameObject.SetActive(false);
+          Lives = Lives - 1;  
+          SetCountText();
+           
+           Destroy(collision.collider.gameObject);
+     }
     }
     private void OnCollisionStay2D(Collision2D collision)
     {
